@@ -2,7 +2,7 @@
 #
 # cx is a wrapper for basic things you want to do with lxc.  It is short
 # for container execute/executor.  Most cx commands take extra options
-# that are forewarded to the lxc counterpart.
+# that are forwarded to the lxc counterpart.
 #
 # Copyright (c) 2019-2020  Joachim Nilsson <troglobit@gmail.com>
 #
