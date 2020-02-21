@@ -369,7 +369,7 @@ import()
     mkdir -p $dir/rw
 
     # Create OverlayFS directories on host
-    mkdir $hostback/$nm/delta0
+    mkdir -p $hostback/$nm/delta0
 
     # create lxc configuration
     configure system $nm $dir $path
