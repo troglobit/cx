@@ -18,19 +18,24 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-# TODO: Move these settings to /etc/cx.conf
-statedir=/var/lib/lxc			# Where container config/rootfs lives
-hostback=/mnt/lxc			# Host backing store; /rw or delta0
+CONF=/etc/cx.conf
+if [ -r $CONF ]; then
+    . $CONF
+else
+    statedir=/var/lib/lxc	# Where container config/rootfs lives
+    hostback=/var/lib/lxc/store	# Host backing store; /rw or delta0
+
+    bridge="lxcbr0"
+    fs="ro"			# read-only sandbox by default
+    vol=""			# No volumes to mount by default
+    type="none"			# Network type: none, empty, veth, phys, vlan, etc.
+    link=""			# For network type phys, vlan, and veth
+    auto=0			# Do not auto-start container by default
+fi
 
 # Local variables
 progname=$0
-bridge="lxcbr0"
-name=""					# Set by -n or arg to command
-fs="ro"					# read-only sandbox by default
-vol=""					# No volumes to mount by default
-type="none"				# Network type: none, empty, veth, phys, vlan, etc.
-link=""					# For network type phys, vlan, and veth
-auto=0					# Do not auto-start container by default
+name=""				# Set by -n or arg to command
 
 usage()
 {
