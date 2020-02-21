@@ -272,7 +272,7 @@ create()
     cd
 
     if [ -d /etc/finit.d ]; then
-	cat > /etc/finit.d/$name.conf <<-EOF
+	cat > /etc/finit.d/$finit_prefix$name.conf <<-EOF
 		# Finit .conf script for supervising an lxc container
 		service :$name [2345] <!> cx start $name -F -- container $name
 		EOF
