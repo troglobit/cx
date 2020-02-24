@@ -220,7 +220,7 @@ attach()
 
     lxc-info -n $name |grep RUNNING >/dev/null
     if [ $? -ne 0 ]; then
-	echo "Container $1 is not running."
+	echo "Container $name is not running."
 	exit 1
     fi
 
@@ -281,7 +281,7 @@ create()
 	echo
     else
 	echo "Container created, start it with:"
-	echo "  cx start $1 -- /bin/sh"
+	echo "  cx start $name -- /bin/sh"
 	echo
     fi
 }
@@ -336,7 +336,7 @@ stop()
 
     lxc-info -n $name |grep RUNNING >/dev/null
     if [ $? -ne 0 ]; then
-	echo "Container $1 is not running."
+	echo "Container $name is not running."
 	exit 1
     fi
 
