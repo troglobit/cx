@@ -48,9 +48,10 @@ usage()
     echo "                         For phys and vlan --link must be given.  Default: none"
     echo " -l,--link ifname        Interface to assign to container, or use as VLAN trunk"
     echo " --overlay               Set up read-write OverlayFS for whole container rootfs"
+    echo "                         Changes are saved to host $hostback/name/foo/delta0"
     echo " -w,--read-write /foo    Set up a single writable bind mount from host to /foo"
     echo "                         Container can bind-mount further to subdirs in /foo"
-    echo "                         Changes are saved to host $hostback/name/foo"
+    echo "                         Changes are saved to host $hostback/name/foo/rw"
     echo "general options:"
     echo " -c,--name name          Container name, unless given as argument later"
     echo
@@ -155,7 +156,7 @@ configure()
 			# For read-only containers, with a single read-write directory from the host,
 			lxc.rootfs.path	  = loop:/$path
 			lxc.rootfs.mount  = $dir/rootfs
-			lxc.mount.entry	  = $dir/rw $vol none bind,create=dir 0 0
+			lxc.mount.entry	  = $hostback/$nm/rw $vol none bind,create=dir 0 0
 			EOF
 		    ;;
 
