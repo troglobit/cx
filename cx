@@ -329,7 +329,12 @@ show()
     if [ "x$name" != "x" ]; then
 	check_exist $name
     fi
-    lxc-ls -f $name
+
+    if [ -n "$name" ]; then
+	lxc-info -n $name
+    else
+	lxc-ls -f $name
+    fi
 }
 
 start()
