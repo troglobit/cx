@@ -58,6 +58,7 @@ usage()
     echo "commands:"
     echo " attach  name            Attach to console"
     echo " create  name            Create new host native container"
+    echo " delete  name            Delete container"
     echo " edit    name            Edit lxc.conf using $EDITOR"
     echo " import  rootfs[.sqsh]   Create new system container"
     echo " ls                      List available containers"
@@ -287,6 +288,22 @@ create()
     fi
 }
 
+# Deletes a container from the system, keeping any assoc. image
+delete()
+{
+    if [ -z "$name" ]; then
+	check_args $*
+	name=$1
+	shift
+    fi
+    dir=$statedir/$name
+
+    check_args $*
+    check_exist $name
+
+    lxc-destroy -n $name $*
+}
+
 edit()
 {
     if [ -z "$name" ]; then
@@ -434,6 +451,9 @@ case $cmd in
 	;;
     create)
 	create $*
+	;;
+    delete)
+	delete $*
 	;;
     edit)
 	edit $*
