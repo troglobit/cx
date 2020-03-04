@@ -29,6 +29,7 @@ else
     fs="ro"			# read-only sandbox by default
     vol=""			# No volumes to mount by default
     type="none"			# Network type: none, empty, veth, phys, vlan, etc.
+    pair=""			# For host managed veth type networking
     link=""			# For network type phys, vlan, and veth
     auto=0			# Do not auto-start container by default
 fi
@@ -46,6 +47,7 @@ usage()
     echo " -b,--bridge brname      Host bridge name for attaching veth interface"
     echo " -t,--net type           Initial network type: none, empty, veth, phys, vlan"
     echo "                         For phys and vlan --link must be given.  Default: none"
+    echo " -p,--pair ifname        For host managed veth type networking"
     echo " -l,--link ifname        Interface to assign to container, or use as VLAN trunk"
     echo " --overlay               Set up read-write OverlayFS for whole container rootfs"
     echo "                         Changes are saved to host $hostback/name/foo/delta0"
@@ -194,11 +196,20 @@ configure()
 		EOF
 	    ;;
 	veth)
-	    cat >> $dir/config <<- EOF
-		lxc.net.0.type	   = veth
-		lxc.net.0.flags	   = up
-		lxc.net.0.link	   = $bridge
-		EOF
+	    if [ -z "$pair" ]; then
+		cat >> $dir/config <<- EOF
+			lxc.net.0.type	   = veth
+			lxc.net.0.flags	   = up
+			lxc.net.0.link	   = $bridge
+			EOF
+	    else
+		cat >> $dir/config <<- EOF
+			lxc.net.0.type	    = veth
+			lxc.net.0.veth.pair = $pair
+			lxc.net.0.flags	    =
+			lxc.net.0.link	    =
+			EOF
+	    fi
 	    ;;
 	empty)				# Only create loopback
 	    cat >> $dir/config <<- EOF
@@ -431,6 +442,10 @@ while [ "$1" != "" ]; do
 	    ;;
 	-c | --name)
 	    name=$2
+	    shift
+	    ;;
+	-p | --pair)
+	    pair=$2
 	    shift
 	    ;;
 	-t | --net)
