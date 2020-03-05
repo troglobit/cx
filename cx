@@ -97,6 +97,22 @@ check_not_exist()
     fi
 }
 
+check_running()
+{
+    if ! lxc-info -n $1 2>/dev/null | grep State: | grep -q RUNNING 2>/dev/null; then
+	echo "Container $1 is not running."
+	exit 1
+    fi
+}
+
+check_not_running()
+{
+    if lxc-info -n $1 2>/dev/null | grep State: | grep -q RUNNING 2>/dev/null; then
+	echo "Container $1 exists and is still running, stop it first."
+	exit 1
+    fi
+}
+
 #
 # configure mode nm dir [path]
 #	Creates LXC config file for nm based on mode.
@@ -244,13 +260,10 @@ attach()
 	name=$1
     fi
 
-    lxc-info -n $name |grep RUNNING >/dev/null
-    if [ $? -ne 0 ]; then
-	echo "Container $name is not running."
-	exit 1
-    fi
+    check_running $name
 
     lxc-console -n $1 -e '^p' -t 0
+    echo
 }
 
 # Creates a container based on the host's rootfs
@@ -259,11 +272,12 @@ create()
     if [ -z "$name" ]; then
 	check_args $*
 	name=$1
+	shift
     fi
     dir=$statedir/$name
 
     check_args $*
-    check_not_exist $name
+    check_not_running $name
 
     # create rootfs
     mkdir -p $dir/rootfs
@@ -308,8 +322,8 @@ delete()
     fi
     dir=$statedir/$name
 
-    check_args $*
     check_exist $name
+    check_not_running $name
 
     lxc-destroy -n $name $*
 }
@@ -394,7 +408,7 @@ import()
 	usage
     fi
 
-    check_not_exist $nm
+    check_not_running $nm
 
     # Create container directory and lxc config
     dir=$statedir/$nm
