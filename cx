@@ -29,7 +29,6 @@ else
     fs="ro"			# read-only sandbox by default
     vol=""			# No volumes to mount by default
     type="none"			# Network type: none, empty, veth, phys, vlan, etc.
-    pair=""			# For host managed veth type networking
     link=""			# For network type phys, vlan, and veth
     auto=0			# Do not auto-start container by default
 fi
@@ -37,6 +36,16 @@ fi
 # Local variables
 progname=$0
 name=""				# Set by -n or arg to command
+
+parse_link()
+{
+    link=$1
+    if [ -z "$2" ]; then
+	guest_ifname=$1
+    else
+	guest_ifname=$2
+    fi
+}
 
 usage()
 {
@@ -47,8 +56,8 @@ usage()
     echo " -b,--bridge brname      Host bridge name for attaching veth interface"
     echo " -t,--net type           Initial network type: none, empty, veth, phys, vlan"
     echo "                         For phys and vlan --link must be given.  Default: none"
-    echo " -p,--pair ifname        For host managed veth type networking"
-    echo " -l,--link ifname        Interface to assign to container, or use as VLAN trunk"
+    echo " -l,--link \"host guest\"  Interface to assign to container, or use as VLAN trunk"
+    echo "                         If guest is omitted the host interface name is exported"
     echo " --overlay               Set up read-write OverlayFS for whole container rootfs"
     echo "                         Changes are saved to host $hostback/name/foo/delta0"
     echo " -w,--read-write /foo    Set up a single writable bind mount from host to /foo"
@@ -202,6 +211,7 @@ configure()
 		lxc.net.0.type	   = phys
 		lxc.net.0.flags	   = up
 		lxc.net.0.link	   = $link
+		lxc.net.0.name	   = $guest_ifname
 		EOF
 	    ;;
 	vlan)
@@ -212,20 +222,11 @@ configure()
 		EOF
 	    ;;
 	veth)
-	    if [ -z "$pair" ]; then
-		cat >> $dir/config <<- EOF
-			lxc.net.0.type	   = veth
-			lxc.net.0.flags	   = up
-			lxc.net.0.link	   = $bridge
-			EOF
-	    else
-		cat >> $dir/config <<- EOF
-			lxc.net.0.type	    = veth
-			lxc.net.0.veth.pair = $pair
-			lxc.net.0.flags	    =
-			lxc.net.0.link	    =
-			EOF
-	    fi
+	    cat >> $dir/config <<- EOF
+		lxc.net.0.type	   = veth
+		lxc.net.0.flags	   = up
+		lxc.net.0.link	   = $bridge
+		EOF
 	    ;;
 	empty)				# Only create loopback
 	    cat >> $dir/config <<- EOF
@@ -458,16 +459,12 @@ while [ "$1" != "" ]; do
 	    name=$2
 	    shift
 	    ;;
-	-p | --pair)
-	    pair=$2
-	    shift
-	    ;;
 	-t | --net)
 	    type=$2
 	    shift
 	    ;;
 	-l | --link)
-	    link=$2
+	    parse_link $2
 	    shift
 	    ;;
 	*)
