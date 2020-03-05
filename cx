@@ -228,7 +228,7 @@ configure()
 		# Finit .conf script for supervising an lxc container
 		service halt:sigpwr kill:10 name:container :$name pid:!/run/lxc/$name.pid log [2345] <!$finit_cond> lxc-start -n $name -p /run/lxc/$name.pid -- Container $name
 		EOF
-	echo "Container created and added to Finit, call `initctl reload` to activate."
+	echo "Container created and added to Finit, call 'initctl reload' to activate."
 	echo
     else
 	echo "Container created, start it with:"
