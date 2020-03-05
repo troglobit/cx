@@ -326,7 +326,10 @@ delete()
     check_exist $name
     check_not_running $name
 
-    lxc-destroy -n $name $*
+    # XXX: Cannot use lxc-destroy, it removes the image without warning
+    #lxc-destroy -n $name $*
+
+    rm -rf $dir
 }
 
 edit()
