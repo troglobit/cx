@@ -434,10 +434,21 @@ import()
 # Required since lxc cannot (yet) mount a squashfs, then add an overlay on top
 # *before* doing the pivot for the container.
 #
-# TODO: Add sanity checks with logging; does image exist, mountpoint free etc.
-#
 mount()
 {
+    if [ ! -e $1 ]; then
+	logger -t app "Cannot find container image $1"
+	exit 1
+    fi
+    if [ ! -d $2 ]; then
+	logger -t app "Missing mount point $2 for container image $1"
+	exit 1
+    fi
+    if mount |grep $2; then
+	logger -t app "Failed mounting $1, already mounted: `mount |grep $2`"
+	exit 1
+    fi
+
     exec mount -n -o loop $1 $2
 }
 
