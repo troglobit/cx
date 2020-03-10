@@ -434,7 +434,7 @@ import()
 # Required since lxc cannot (yet) mount a squashfs, then add an overlay on top
 # *before* doing the pivot for the container.
 #
-mount()
+mountimg()
 {
     if [ ! -e $1 ]; then
 	logger -t app "Cannot find container image $1"
@@ -509,7 +509,7 @@ case $cmd in
 	show
 	;;
     mount)
-	mount $*
+	mountimg $*
 	;;
     show)
 	show $*
