@@ -438,7 +438,7 @@ import()
 #
 mount()
 {
-    mount -n -o loop $1 $2
+    exec mount -n -o loop $1 $2
 }
 
 while [ "$1" != "" ]; do
