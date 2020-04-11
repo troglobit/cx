@@ -11,8 +11,12 @@ Calls
 
     lxc-start -n foo -l debug -o /tmp/foo
 
-For systems with [Finit][], cx automatically creates a `.conf`
-for new containers in `/etc/finit.d/`
+For systems with [Finit][], cx automatically creates service `.conf` for
+new containers in `/etc/finit.d/`.  Stopping and starting containers can
+then be done using:
+
+    initctl start container:foo
+    initctl stop  container:foo
 
 ----
 
