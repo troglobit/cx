@@ -488,7 +488,10 @@ while [ "$1" != "" ]; do
 done
 
 cmd=$1
-shift
+if [ -n "$cmd" ]; then
+   shift
+fi
+
 case $cmd in
     attach)
 	attach $*
