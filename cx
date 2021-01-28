@@ -37,6 +37,28 @@ fi
 progname=$0
 name=""				# Set by -n or arg to command
 
+# Since busybox has a severly limited timeout builtin we can't use all of them
+# fancy options. This will only work on Linux, but if we're dealing with LXC
+# then this is likely not a problem.
+# Ensure this function is called before doing any real work.
+setup_wrappers()
+{
+    me=`exec 2>/dev/null ; readlink "/proc/$$/exe"`
+    case "$me" in
+	*/busybox)
+	    CMD_WRAPPER_PRE="timeout -t 1"
+	    ;;
+	*)
+	    CMD_WRAPPER_PRE="timeout --preserve-status 1 -k 1"
+	    ;;
+    esac
+
+    # The purpose here is to avoid lxc-{ls,info} hanging if the container
+    # we're querying is broken, which they do otherwise.
+    LXC_INFO="$CMD_WRAPPER_PRE lxc-info"
+    LXC_LS="$CMD_WRAPPER_PRE lxc-ls"
+}
+
 parse_link()
 {
     link=$1
@@ -108,7 +130,7 @@ check_not_exist()
 
 check_running()
 {
-    if ! lxc-info -n $1 2>/dev/null | grep State: | grep -q RUNNING 2>/dev/null; then
+    if ! $LXC_INFO -n $1 2>/dev/null | grep State: | grep -q RUNNING 2>/dev/null; then
 	echo "Container $1 is not running."
 	exit 1
     fi
@@ -116,7 +138,7 @@ check_running()
 
 check_not_running()
 {
-    if lxc-info -n $1 2>/dev/null | grep State: | grep -q RUNNING 2>/dev/null; then
+    if $LXC_INFO -n $1 2>/dev/null | grep State: | grep -q RUNNING 2>/dev/null; then
 	echo "Container $1 exists and is still running, stop it first."
 	exit 1
     fi
@@ -351,17 +373,24 @@ edit()
 
 show()
 {
-    if [ -z "$name" ]; then
-	name=$1
-    fi
-    if [ "x$name" != "x" ]; then
+    if [ -n "$name" ]; then
 	check_exist $name
+    else
+	if [ "$#" -gt "0" ]; then
+	    name=$1
+	fi
     fi
 
     if [ -n "$name" ]; then
-	lxc-info -n $name
+	if ! $LXC_INFO -n $name 2>/dev/null ; then
+	    echo "Failed to read status of container $name."
+	    echo "Ensure that the container is configured correctly."
+	fi
     else
-	lxc-ls -f $name
+	if ! $LXC_LS -f $name 2>/dev/null ; then
+	    echo "Failed to read status of system containers."
+	    echo "Ensure that they are configured correctly."
+	fi
     fi
 }
 
@@ -385,7 +414,7 @@ stop()
 	shift
     fi
 
-    lxc-info -n $name |grep RUNNING >/dev/null
+    $LXC_INFO -n $name |grep RUNNING >/dev/null
     if [ $? -ne 0 ]; then
 	echo "Container $name is not running."
 	exit 1
@@ -451,6 +480,8 @@ mountimg()
 
     exec mount -n -o loop $1 $2
 }
+
+setup_wrappers
 
 while [ "$1" != "" ]; do
     case $1 in
